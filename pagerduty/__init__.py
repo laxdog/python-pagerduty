@@ -33,6 +33,7 @@ class PagerDuty(object):
         self.timeout = timeout
     
     def trigger(self, description, incident_key=None, details=None):
+        description = bytes(description, 'UTF-8')
         return self._request("trigger", description=description, incident_key=incident_key, details=details)
     
     def acknowledge(self, incident_key, description=None, details=None):
@@ -49,7 +50,7 @@ class PagerDuty(object):
         for k, v in list(kwargs.items()):
             if v is not None:
                 event[k] = v
-        encoded_event = json.dumps(event)
+        encoded_event = json.dumps(str(event))
         try:
             res = urllib.request.urlopen(self.api_endpoint, encoded_event, self.timeout)
         except urllib.error.HTTPError as exc:

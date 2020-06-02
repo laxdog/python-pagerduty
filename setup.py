@@ -11,7 +11,7 @@ except IOError:
     long_description = ""
 
 setup(
-    name = 'pagerduty',
+    name = 'python3-pagerduty',
     version = VERSION,
     description = 'Library for the PagerDuty service API',
     long_description = long_description,
