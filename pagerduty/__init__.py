@@ -4,6 +4,9 @@ try:
     import json
 except ImportError:
     import simplejson as json
+
+import sys
+import requests
 import urllib.request, urllib.error, urllib.parse
 
 from pagerduty.version import *
@@ -11,7 +14,7 @@ from pagerduty.version import *
 __version__ = VERSION
 
 class PagerDutyException(Exception):
-    def __init__(self, status, message, errors):
+    def __init__(self, status, message, errors=None):
         super(PagerDutyException, self).__init__(message)
         self.msg = message
         self.status = status
@@ -52,16 +55,21 @@ class PagerDuty(object):
                 event[k] = v
         encoded_event = json.dumps(str(event))
         try:
-            res = urllib.request.urlopen(self.api_endpoint, encoded_event, self.timeout)
+            res = requests.post(self.api_endpoint, json=encoded_event)
+        except Exception as e:
+            if res.status_code != 400:
+                raise
+            res = e
+            """
         except urllib.error.HTTPError as exc:
             if exc.code != 400:
                 raise
             res = exc
+            """
         
-        result = json.loads(res.read())
-        
-        if result['status'] != "success":
-            raise PagerDutyException(result['status'], result['message'], result['errors'])
+        result = json.loads(res.text)
+        if res.status_code != requests.codes.ok:
+            raise PagerDutyException(res.status_code, res.text, result['errors'])
         
         # if result['warnings]: ...
         
