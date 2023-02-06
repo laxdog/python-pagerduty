@@ -4,9 +4,6 @@ try:
     import json
 except ImportError:
     import simplejson as json
-
-import sys
-import requests
 import urllib.request, urllib.error, urllib.parse
 
 from pagerduty.version import *
@@ -14,7 +11,7 @@ from pagerduty.version import *
 __version__ = VERSION
 
 class PagerDutyException(Exception):
-    def __init__(self, status, message, errors=None):
+    def __init__(self, status, message, errors):
         super(PagerDutyException, self).__init__(message)
         self.msg = message
         self.status = status
@@ -36,7 +33,6 @@ class PagerDuty(object):
         self.timeout = timeout
     
     def trigger(self, description, incident_key=None, details=None):
-        description = bytes(description, 'UTF-8')
         return self._request("trigger", description=description, incident_key=incident_key, details=details)
     
     def acknowledge(self, incident_key, description=None, details=None):
@@ -53,23 +49,18 @@ class PagerDuty(object):
         for k, v in list(kwargs.items()):
             if v is not None:
                 event[k] = v
-        encoded_event = json.dumps(str(event))
+        encoded_event = json.dumps(event)
         try:
-            res = requests.post(self.api_endpoint, json=encoded_event)
-        except Exception as e:
-            if res.status_code != 400:
-                raise
-            res = e
-            """
+            res = urllib.request.urlopen(self.api_endpoint, encoded_event, self.timeout)
         except urllib.error.HTTPError as exc:
             if exc.code != 400:
                 raise
             res = exc
-            """
         
-        result = json.loads(res.text)
-        if res.status_code != requests.codes.ok:
-            raise PagerDutyException(res.status_code, res.text, result['errors'])
+        result = json.loads(res.read())
+        
+        if result['status'] != "success":
+            raise PagerDutyException(result['status'], result['message'], result['errors'])
         
         # if result['warnings]: ...
         

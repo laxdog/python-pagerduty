@@ -17,9 +17,8 @@ setup(
     long_description = long_description,
     author = 'Samuel Stauffer',
     author_email = 'samuel@playhaven.com',
-    url = 'http://github.com/samuel/python-pagerduty',
+    url = 'http://github.com/prosperworks/python-pagerduty',
     packages = find_packages(),
-    install_requires=open('requirements.txt', 'r').readlines(),
     license = "BSD",
     entry_points = {
         "console_scripts": [
